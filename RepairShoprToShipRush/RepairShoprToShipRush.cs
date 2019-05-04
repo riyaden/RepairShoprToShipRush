@@ -11,7 +11,7 @@ namespace RepairShoprToShipRush
     public static class RepairShoprToShipRush
     {
         [FunctionName("RepairShoprToShipRush")]
-        public static async Task RunAsync([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task RunAsync([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
