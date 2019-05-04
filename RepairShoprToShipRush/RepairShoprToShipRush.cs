@@ -20,154 +20,189 @@ namespace RepairShoprToShipRush
         {
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
-            const string xmlPayloadTemplate = "<?xml version = '1.0'?><Request><ShipTransaction><Shipment><Package><PackageActualWeight>0</PackageActualWeight></Package><DeliveryAddress><Address><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></Address></DeliveryAddress></Shipment><Order>{9}<OrderNumber>{10}</OrderNumber><PaymentStatus>2</PaymentStatus><ItemsTax>{11}</ItemsTax><Total>{12}</Total><ItemsTotal>{13}</ItemsTotal><BillingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></BillingAddress><ShippingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></ShippingAddress></Order></ShipTransaction></Request>";
+            const string xmlPayloadTemplate = "<?xml version = \"1.0\"?><Request><ShipTransaction><Shipment><Package><PackageActualWeight>0</PackageActualWeight></Package><DeliveryAddress><Address><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></Address></DeliveryAddress></Shipment><Order>{9}<OrderNumber>{10}</OrderNumber><PaymentStatus>2</PaymentStatus><ItemsTax>{11}</ItemsTax><Total>{12}</Total><ItemsTotal>{13}</ItemsTotal><BillingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></BillingAddress><ShippingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></ShippingAddress></Order></ShipTransaction></Request>";
             const string itemPayloadTemplate = "<ShipmentOrderItem><Name>{0}</Name><Price>{1}</Price><Quantity>{2}</Quantity><Total>{3}</Total></ShipmentOrderItem>";
-            const string orderPayloadTemplate = "{'note': '{0}'}";
 
             string repairShoprUri = Environment.GetEnvironmentVariable("repairShoprUri");
             string repairShoprApiKey = Environment.GetEnvironmentVariable("repairShoprApiKey");
             string shipRushUri = Environment.GetEnvironmentVariable("shipRushUri");
 
-            var repairShoprClient = new HttpClient();
-            repairShoprClient.DefaultRequestHeaders.Accept.Clear();
-            repairShoprClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            repairShoprClient.DefaultRequestHeaders.Add("User-Agent", ".NET RepairShoprToShipRush");
-
-            var invoicesUri = repairShoprUri + "?api_key=" + repairShoprApiKey;
-            log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoicesUri}");
-            var invoicesResponse = await repairShoprClient.GetAsync(invoicesUri);
-
-            if (invoicesResponse.IsSuccessStatusCode)
+            using (var repairShoprClient = new HttpClient())
             {
-                var invoicesJson = await invoicesResponse.Content.ReadAsStringAsync();
-                var invoices = JsonConvert.DeserializeObject<Invoices>(invoicesJson).invoices.Where(i => i.is_paid && string.IsNullOrEmpty(i.note));
+                repairShoprClient.DefaultRequestHeaders.Accept.Clear();
+                repairShoprClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                log.LogInformation($"{DateTime.Now} | Found {invoices.Count()} invoices");
+                var invoicesUri = repairShoprUri + "?api_key=" + repairShoprApiKey;
+                log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoicesUri}");
+                var invoicesResponse = await repairShoprClient.GetAsync(invoicesUri);
 
-                if (invoices.Count() > 0)
+                if (invoicesResponse.IsSuccessStatusCode)
                 {
-                    var shipRushClient = new HttpClient();
-                    shipRushClient.DefaultRequestHeaders.Accept.Clear();
-                    shipRushClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
-
-                    foreach (var invoiceItem in invoices)
-                    {
-                        var invoiceDetailsUri = repairShoprUri + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
-                        log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoiceDetailsUri}");
-                        var invoiceResponse = await repairShoprClient.GetAsync(invoiceDetailsUri);
-
-                        if (invoiceResponse.IsSuccessStatusCode)
+                    var invoicesJson = await invoicesResponse.Content.ReadAsStringAsync();
+                    var invoicesRoot = JsonConvert.DeserializeObject<Invoices>(invoicesJson);
+                    var invoices = invoicesRoot.invoices
+                        .Where(i => i.is_paid)
+                        .Where(delegate (Invoice i)
                         {
-                            var invoiceJson = await invoiceResponse.Content.ReadAsStringAsync();
-                            var invoice = JsonConvert.DeserializeObject<InvoiceObject>(invoiceJson).invoice;
+                            return
+                            (string.IsNullOrEmpty(i.note))
+                            ||
+                            (!string.IsNullOrEmpty(i.note) && !i.note.Contains("ShipRushOrderID#"));
+                        });
 
-                            log.LogInformation($"{DateTime.Now} | Parsing invoice, wish me luck!");
+                    log.LogInformation($"{DateTime.Now} | Found {invoices.Count()} new invoices");
 
-                            string lineitems = string.Empty;
+                    if (invoices.Count() > 0)
+                    {
+                        using (var shipRushClient = new HttpClient())
+                        {
+                            shipRushClient.DefaultRequestHeaders.Accept.Clear();
+                            shipRushClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
 
-                            foreach (var lineitem in invoice.line_items)
+                            foreach (var invoiceItem in invoices)
                             {
-                                string itemtotal = (float.Parse(lineitem.quantity) * float.Parse(lineitem.price)).ToString();
+                                var invoiceDetailsUri = repairShoprUri + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
+                                log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoiceDetailsUri}");
+                                var invoiceResponse = await repairShoprClient.GetAsync(invoiceDetailsUri);
 
-                                string itemPayload = string.Format(itemPayloadTemplate,
-                                    lineitem.name,
-                                    lineitem.price,
-                                    lineitem.quantity,
-                                    itemtotal
-                                    );
-
-                                lineitems += itemPayload;
-                            }
-
-                            string xmlPayload = string.Format(xmlPayloadTemplate,
-                                invoice.customer.fullname,
-                                invoice.customer.business_name,
-                                invoice.customer.address,
-                                invoice.customer.address_2,
-                                invoice.customer.city,
-                                invoice.customer.state,
-                                invoice.customer.zip,
-                                invoice.customer.mobile,
-                                invoice.customer.email,
-                                lineitems,
-                                invoice.id,
-                                invoice.tax,
-                                invoice.total,
-                                invoice.line_items.Count
-                                );
-
-                            log.LogInformation($"{DateTime.Now} | Parsing completed, XML Payload: xmlPayload");
-
-                            log.LogInformation($"{DateTime.Now} | Pushing payload to Uri {shipRushUri}");
-                            var xmlContent = new StringContent(xmlPayload, Encoding.UTF8, "application/xml");
-                            var orderResponse = await shipRushClient.PostAsync(shipRushUri, xmlContent);
-
-                            if (orderResponse.IsSuccessStatusCode)
-                            {
-                                var orderXml = await orderResponse.Content.ReadAsStringAsync();
-                                XmlDocument orderDocument = new XmlDocument();
-                                orderDocument.LoadXml(orderXml);
-                                var orderId = orderDocument.GetElementsByTagName("OrderId").Item(0).Value;
-
-                                log.LogInformation($"{DateTime.Now} | Updating invoice with shipping OrderId to leave our mark {orderId}");
-                                var orderUpdate = await repairShoprClient.PutAsJsonAsync(
-                                    invoiceDetailsUri,
-                                    string.Format(orderPayloadTemplate, orderId)
-                                    );
-
-                                if (orderUpdate.IsSuccessStatusCode)
+                                if (invoiceResponse.IsSuccessStatusCode)
                                 {
-                                    log.LogInformation($"{DateTime.Now} | Invoice updated, wohooo");
+                                    var invoiceJson = await invoiceResponse.Content.ReadAsStringAsync();
+                                    var invoice = JsonConvert.DeserializeObject<InvoiceObject>(invoiceJson).invoice;
+
+                                    log.LogInformation($"{DateTime.Now} | Parsing invoice, wish me luck!");
+
+                                    string lineitems = GetLineItems(itemPayloadTemplate, invoice);
+
+                                    string xmlPayload = GetXmlContent(log, xmlPayloadTemplate, invoice, lineitems);
+
+                                    var xmlContent = new StringContent(xmlPayload, Encoding.UTF8, "application/xml");
+
+                                    log.LogInformation($"{DateTime.Now} | Pushing payload to Uri {shipRushUri}");
+                                    var orderResponse = await shipRushClient.PostAsync(shipRushUri, xmlContent);
+
+                                    if (orderResponse.IsSuccessStatusCode)
+                                    {
+                                        var orderXml = await orderResponse.Content.ReadAsStringAsync();
+                                        XmlDocument orderDocument = new XmlDocument();
+                                        orderDocument.LoadXml(orderXml);
+                                        var orderId = "null-order-id";
+
+                                        try
+                                        {
+                                            orderId = orderDocument.GetElementsByTagName("OrderId")[0].InnerText;
+                                        }
+                                        catch (Exception)
+                                        {
+                                            log.LogWarning($"{DateTime.Now} | The response from ShipRush did not return an OrderId, most likely this order already exists.");
+                                        }
+
+                                        log.LogInformation($"{DateTime.Now} | Updating invoice with shipping OrderId to leave our mark {orderId}");
+
+                                        var noteContent = new StringContent("{\"note\":\"ShipRushOrderID#" + orderId + @"\r\n" + invoice.note + "\"}", Encoding.UTF8, "application/json");
+
+                                        var orderUpdate = await repairShoprClient.PutAsync(invoiceDetailsUri, noteContent);
+
+                                        if (orderUpdate.IsSuccessStatusCode)
+                                        {
+                                            var result = await orderUpdate.Content.ReadAsStringAsync();
+                                            log.LogInformation($"{DateTime.Now} | Invoice updated: {result}");
+                                        }
+                                        else
+                                        {
+                                            log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from repairshopr");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        log.LogError($"{DateTime.Now} | Pushing payload to Uri {shipRushUri} has probably failed.");
+                                    }
                                 }
                                 else
                                 {
-                                    log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from repairshopr");
+                                    log.LogError($"{DateTime.Now} | Failed to get invoice details from Uri {invoiceDetailsUri}, Error details: {invoiceResponse.Content}");
                                 }
                             }
-                            else
-                            {
-                                log.LogError($"{DateTime.Now} | Pushing payload to Uri {shipRushUri} has probably failed.");
-                            }
                         }
-                        else
-                        {
-                            log.LogError($"{DateTime.Now} | Failed to get invoice details from Uri {invoiceDetailsUri}, Error details: {invoiceResponse.Content}");
-                        }
+                    }
+                    else
+                    {
+                        log.LogInformation($"{DateTime.Now} | No new invoices found, nothing to do here...");
                     }
                 }
                 else
                 {
-                    log.LogInformation($"{DateTime.Now} | No new invoices found, nothing to do here...");
+                    log.LogError($"{DateTime.Now} | Failed to get invoices from Uri {invoicesUri}, Error details: {invoicesResponse.Content}");
                 }
-            }
-            else
-            {
-                log.LogError($"{DateTime.Now} | Failed to get invoices from Uri {invoicesUri}, Error details: {invoicesResponse.Content}");
             }
 
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has ended");
+        }
+
+        private static string GetLineItems(string itemPayloadTemplate, Invoice invoice)
+        {
+            string lineitems = string.Empty;
+
+            foreach (var lineitem in invoice.line_items)
+            {
+                string itemtotal = (float.Parse(lineitem.quantity) * float.Parse(lineitem.price)).ToString();
+
+                string itemPayload = string.Format(itemPayloadTemplate,
+                    lineitem.name,
+                    lineitem.price,
+                    lineitem.quantity,
+                    itemtotal
+                    );
+
+                lineitems += itemPayload;
+            }
+
+            return lineitems;
+        }
+
+        private static string GetXmlContent(ILogger log, string xmlPayloadTemplate, Invoice invoice, string lineitems)
+        {
+            string xmlPayload = string.Format(xmlPayloadTemplate,
+                                                    invoice.customer.fullname,
+                                                    invoice.customer.business_name,
+                                                    invoice.customer.address,
+                                                    invoice.customer.address_2,
+                                                    invoice.customer.city,
+                                                    invoice.customer.state,
+                                                    invoice.customer.zip,
+                                                    invoice.customer.mobile,
+                                                    invoice.customer.email,
+                                                    lineitems,
+                                                    invoice.number,
+                                                    invoice.tax,
+                                                    invoice.total,
+                                                    invoice.line_items.Count
+                                                    );
+
+            log.LogInformation($"{DateTime.Now} | Parsing completed, XML Payload: {xmlPayload}");
+            return xmlPayload;
         }
     }
 
     public class LineItem
     {
-        public int id { get; set; }
+        public int? id { get; set; }
         public DateTime created_at { get; set; }
         public DateTime updated_at { get; set; }
-        public int invoice_id { get; set; }
+        public int? invoice_id { get; set; }
         public string item { get; set; }
         public string name { get; set; }
         public string cost { get; set; }
         public string price { get; set; }
         public string quantity { get; set; }
         public object product_id { get; set; }
-        public bool taxable { get; set; }
+        public bool? taxable { get; set; }
         public object discount_percent { get; set; }
-        public int position { get; set; }
+        public int? position { get; set; }
         public object invoice_bundle_id { get; set; }
         public string product_category { get; set; }
         public object tax_note { get; set; }
-        public int user_id { get; set; }
+        public int? user_id { get; set; }
         public object line_discount_percent { get; set; }
         public object discount_dollars { get; set; }
     }
@@ -226,7 +261,7 @@ namespace RepairShoprToShipRush
         public object location_name { get; set; }
         public object location_id { get; set; }
         public string online_profile_url { get; set; }
-        public int tax_rate_id { get; set; }
+        public int? tax_rate_id { get; set; }
         public string notification_email { get; set; }
         public string invoice_cc_emails { get; set; }
         public object invoice_term_id { get; set; }
