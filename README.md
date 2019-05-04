@@ -92,9 +92,8 @@ So, from now on, everything you do will be on your new forked repository.
 | repairShoprUri | https://**helshabini**.repairshopr.com/api/v1/invoices | API Url from RepairShopr |
 | repairShoprApiKey | xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx | API Key from RepairShopr |
 | shipRushUri | https://api.my.shiprush.com/IntegrationService.svc/**xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx**/order/add | API Url and Key from ShipRush |
-
 | testMode | false | If you're even unsure of the app's behavior, test mode allows you to only read values from RepiarShopr without writing anything to ShipRush. I adivse you set this to **true** the first time your run the app and check the logs first |
-- Don't forget to press "Save" on the "Application Settings" page after you add these values
 
+- Don't forget to press "Save" on the "Application Settings" page after you add these values
 
 And that's it, you should be done. To make sure the Function App is working, go back to the Function App's main page, click on the app name from the left menu, and scroll down the page to open the "Logs" pane. You should see something like this.
