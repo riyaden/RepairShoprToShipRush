@@ -54,11 +54,11 @@ namespace RepairShoprToShipRush
                     {
                         var invoiceDetailsUri = repairShoprUri + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
                         log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoiceDetailsUri}");
-                        var invoiceTask = repairShoprClient.GetStringAsync(invoiceDetailsUri);
+                        var invoiceResponse = await repairShoprClient.GetAsync(invoiceDetailsUri);
 
-                        if (invoiceTask.IsCompletedSuccessfully)
+                        if (invoiceResponse.IsSuccessStatusCode)
                         {
-                            var invoiceJson = await invoiceTask;
+                            var invoiceJson = await invoiceResponse.Content.ReadAsStringAsync();
                             var invoice = JsonConvert.DeserializeObject<InvoiceObject>(invoiceJson).invoice;
 
                             log.LogInformation($"{DateTime.Now} | Parsing invoice, wish me luck!");
@@ -131,7 +131,7 @@ namespace RepairShoprToShipRush
                         }
                         else
                         {
-                            log.LogError($"{DateTime.Now} | Failed to get invoice details from Uri {invoiceDetailsUri}, please check configuration file");
+                            log.LogError($"{DateTime.Now} | Failed to get invoice details from Uri {invoiceDetailsUri}, Error details: {invoiceResponse.Content}");
                         }
                     }
                 }
