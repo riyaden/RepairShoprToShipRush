@@ -18,12 +18,13 @@ namespace RepairShoprToShipRush
         [FunctionName("RepairShoprToShipRush")]
         public static async Task RunAsync([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
         {
-            const string repairShoprUrl = "https://helshabini.repairshopr.com/api/v1/invoices";
-            const string repairShoprApiKey = "b6b3adc5-0216-40c7-8767-839b26069bc3";
-            const string shipRushUri = "https://api.my.shiprush.com/IntegrationService.svc/FleCABzFwUq2IKpCAAIUYg/xP8hNsuMi0-U9qpCAAHoug/order/add";
             const string xmlPayloadTemplate = "<?xml version = '1.0'?><Request><ShipTransaction><Shipment><Package><PackageActualWeight>0</PackageActualWeight></Package><DeliveryAddress><Address><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></Address></DeliveryAddress></Shipment><Order>{9}<OrderNumber>{10}</OrderNumber><PaymentStatus>2</PaymentStatus><ItemsTax>{11}</ItemsTax><Total>{12}</Total><ItemsTotal>{13}</ItemsTotal><BillingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></BillingAddress><ShippingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></ShippingAddress></Order></ShipTransaction></Request>";
             const string itemPayloadTemplate = "<ShipmentOrderItem><Name>{0}</Name><Price>{1}</Price><Quantity>{2}</Quantity><Total>{3}</Total></ShipmentOrderItem>";
             const string orderPayloadTemplate = "{'note': '{0}'}";
+
+            string repairShoprUri = Environment.GetEnvironmentVariable("repairShoprUri");
+            string repairShoprApiKey = Environment.GetEnvironmentVariable("repairShoprApiKey");
+            string shipRushUri = Environment.GetEnvironmentVariable("shipRushUri");
 
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
@@ -32,7 +33,7 @@ namespace RepairShoprToShipRush
             repairShoprClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             repairShoprClient.DefaultRequestHeaders.Add("User-Agent", ".NET RepairShoprToShipRush");
 
-            var invoicesUri = repairShoprUrl + "?api_key=" + repairShoprApiKey;
+            var invoicesUri = repairShoprUri + "?api_key=" + repairShoprApiKey;
             log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoicesUri}");
             var invoicesTask = repairShoprClient.GetStringAsync(invoicesUri);
 
@@ -51,7 +52,7 @@ namespace RepairShoprToShipRush
 
                     foreach (var invoiceItem in invoices)
                     {
-                        var invoiceDetailsUri = repairShoprUrl + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
+                        var invoiceDetailsUri = repairShoprUri + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
                         log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoiceDetailsUri}");
                         var invoiceTask = repairShoprClient.GetStringAsync(invoiceDetailsUri);
 
