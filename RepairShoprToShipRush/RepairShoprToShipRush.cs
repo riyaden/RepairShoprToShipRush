@@ -16,7 +16,7 @@ namespace RepairShoprToShipRush
     public static class RepairShoprToShipRush
     {
         [FunctionName("RepairShoprToShipRush")]
-        public static async Task RunAsync([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task RunAsync([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
@@ -26,6 +26,7 @@ namespace RepairShoprToShipRush
             string repairShoprUri = Environment.GetEnvironmentVariable("repairShoprUri");
             string repairShoprApiKey = Environment.GetEnvironmentVariable("repairShoprApiKey");
             string shipRushUri = Environment.GetEnvironmentVariable("shipRushUri");
+            bool testMode = bool.Parse(Environment.GetEnvironmentVariable("testMode"));
 
             using (var repairShoprClient = new HttpClient())
             {
@@ -63,6 +64,7 @@ namespace RepairShoprToShipRush
                             {
                                 var invoiceDetailsUri = repairShoprUri + "/" + invoiceItem.id + "?api_key=" + repairShoprApiKey;
                                 log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoiceDetailsUri}");
+                                
                                 var invoiceResponse = await repairShoprClient.GetAsync(invoiceDetailsUri);
 
                                 if (invoiceResponse.IsSuccessStatusCode)
@@ -77,6 +79,11 @@ namespace RepairShoprToShipRush
                                     string xmlPayload = GetXmlContent(log, xmlPayloadTemplate, invoice, lineitems);
 
                                     var xmlContent = new StringContent(xmlPayload, Encoding.UTF8, "application/xml");
+
+                                    if (!testMode)
+                                    {
+                                        continue;
+                                    }
 
                                     log.LogInformation($"{DateTime.Now} | Pushing payload to Uri {shipRushUri}");
                                     var orderResponse = await shipRushClient.PostAsync(shipRushUri, xmlContent);
