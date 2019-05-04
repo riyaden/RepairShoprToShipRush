@@ -35,7 +35,7 @@ So, from now on, everything you do will be on your new forked repository.
   - Runtime Stack: The app is built using .Net runtime (netcore2.1)
   - Storage: The app needs a Storage Account to store the resulting logs, this wizard will create you a new Storage Account
   - Application Insights: This is an Application Performance Monitoring platform, for the purposes of our small app, this won't be required, just set it to disabled
-![](images/azure-2/png)
+![](images/azure-2.png)
 - Once you fill in these details as shown, click Create and give it a minute to be be done. You can the deployment progress on the Notifications area on the top right corner.
 ![](images/azure-3.png)
 - Once the Function App is deployed, click on "Go to resource" from the Notifications area
