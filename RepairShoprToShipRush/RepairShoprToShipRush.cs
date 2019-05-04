@@ -16,8 +16,10 @@ namespace RepairShoprToShipRush
     public static class RepairShoprToShipRush
     {
         [FunctionName("RepairShoprToShipRush")]
-        public static async Task RunAsync([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task RunAsync([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
         {
+            log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
+
             const string xmlPayloadTemplate = "<?xml version = '1.0'?><Request><ShipTransaction><Shipment><Package><PackageActualWeight>0</PackageActualWeight></Package><DeliveryAddress><Address><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></Address></DeliveryAddress></Shipment><Order>{9}<OrderNumber>{10}</OrderNumber><PaymentStatus>2</PaymentStatus><ItemsTax>{11}</ItemsTax><Total>{12}</Total><ItemsTotal>{13}</ItemsTotal><BillingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></BillingAddress><ShippingAddress><FirstName>{0}</FirstName><Company>{1}</Company><Address1>{2}</Address1><Address2>{3}</Address2><City>{4}</City><State>{5}</State><Country>US</Country><StateAsString>{5}</StateAsString><CountryAsString>US</CountryAsString><PostalCode>{6}</PostalCode><Phone>{7}</Phone><EMail>{8}</EMail></ShippingAddress></Order></ShipTransaction></Request>";
             const string itemPayloadTemplate = "<ShipmentOrderItem><Name>{0}</Name><Price>{1}</Price><Quantity>{2}</Quantity><Total>{3}</Total></ShipmentOrderItem>";
             const string orderPayloadTemplate = "{'note': '{0}'}";
@@ -26,8 +28,6 @@ namespace RepairShoprToShipRush
             string repairShoprApiKey = Environment.GetEnvironmentVariable("repairShoprApiKey");
             string shipRushUri = Environment.GetEnvironmentVariable("shipRushUri");
 
-            log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
-
             var repairShoprClient = new HttpClient();
             repairShoprClient.DefaultRequestHeaders.Accept.Clear();
             repairShoprClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -35,11 +35,11 @@ namespace RepairShoprToShipRush
 
             var invoicesUri = repairShoprUri + "?api_key=" + repairShoprApiKey;
             log.LogInformation($"{DateTime.Now} | Getting invoices from Uri {invoicesUri}");
-            var invoicesTask = repairShoprClient.GetStringAsync(invoicesUri);
+            var invoicesResponse = await repairShoprClient.GetAsync(invoicesUri);
 
-            if (invoicesTask.IsCompletedSuccessfully)
+            if (invoicesResponse.IsSuccessStatusCode)
             {
-                var invoicesJson = await invoicesTask;
+                var invoicesJson = await invoicesResponse.Content.ReadAsStringAsync();
                 var invoices = JsonConvert.DeserializeObject<Invoices>(invoicesJson).invoices.Where(i => i.is_paid && string.IsNullOrEmpty(i.note));
 
                 log.LogInformation($"{DateTime.Now} | Found {invoices.Count()} invoices");
@@ -142,7 +142,7 @@ namespace RepairShoprToShipRush
             }
             else
             {
-                log.LogError($"{DateTime.Now} | Failed to get invoices from Uri {invoicesUri}, please check configuration file");
+                log.LogError($"{DateTime.Now} | Failed to get invoices from Uri {invoicesUri}, Error details: {invoicesResponse.Content}");
             }
 
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has ended");
