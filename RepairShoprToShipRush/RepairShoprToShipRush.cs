@@ -77,7 +77,7 @@ namespace RepairShoprToShipRush
                         }
 
                         log.LogInformation($"{DateTime.Now} | Updating invoice with shipping OrderId to leave our mark {orderId}");
-                        var updatedInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#" + orderId + @"\r\n" + invoice.note + "\"}");
+                        var updatedInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#" + orderId + "   " + invoice.note + "\"}");
                         if (updatedInvoice == null || updatedInvoice.note == invoice.note)
                         {
                             log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from RepairShopr");
