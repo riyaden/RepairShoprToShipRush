@@ -95,7 +95,8 @@ So, from now on, everything you do will be on your new forked repository.
 | testMode | **false** |
 
 **testMode** allows you to just test the app if you're unsure of the app's behavior. It allows you to only read values from RepiarShopr without writing anything to ShipRush. I adivse you set this to **true** the first time your run the app and check the logs first
-- Don't forget to press "Save" on the "Application Settings" page after you add these values
+- Don't forget to press "Save" on the "Application Settings" page after you add these values. After I was done this is what it looked like for me.
+![](images/azure-16.png)
 
 And that's it, you should be done. To make sure the Function App is working, go back to the Function App's main page, click on the app name from the left menu, and scroll down the page to open the "Logs" pane. You should see something like this.
 ![](images/azure-15.png)
