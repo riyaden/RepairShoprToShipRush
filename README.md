@@ -82,9 +82,9 @@ So, from now on, everything you do will be on your new forked repository.
 
 ### Setting the Azure Function configuration
 - Now let's take the Urls and API Keys we collected and put them in the Azure Function so it can start working. So go back to your Function App and click "Application Settings"
-![](images/azure-13)
+![](images/azure-13.png)
 - Click the "New Application Setting" button to add your settings one by one.
-![](images/azure-14)
+![](images/azure-14.png)
 - The table below shows all the values needed for configuration, you should have all the values from the previous steps. This is the kind of thing where an extra space or capitalization would break things, so be carefull. Don't forget to change the items in bold to match your tenants.
 
 | Name | Value |
@@ -98,4 +98,4 @@ So, from now on, everything you do will be on your new forked repository.
 - Don't forget to press "Save" on the "Application Settings" page after you add these values
 
 And that's it, you should be done. To make sure the Function App is working, go back to the Function App's main page, click on the app name from the left menu, and scroll down the page to open the "Logs" pane. You should see something like this.
-![](images/azure-15)
+![](images/azure-15.png)
