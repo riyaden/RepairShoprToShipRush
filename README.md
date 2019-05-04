@@ -86,11 +86,13 @@ So, from now on, everything you do will be on your new forked repository.
 - Click the "New Application Setting" button to add your settings one by one.
 ![](images/azure-14)
 - The table below shows all the values needed for configuration, you should have all the values from the previous steps. This is the kind of thing where an extra space or capitalization would break things, so be carefull. Don't forget to change the items in bold to match your tenants.
+
 | Name | Value | Notes |
 | --- | --- | --- |
 | repairShoprUri | https://**helshabini**.repairshopr.com/api/v1/invoices | API Url from RepairShopr |
 | repairShoprApiKey | xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx | API Key from RepairShopr |
 | shipRushUri | https://api.my.shiprush.com/IntegrationService.svc/**xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx**/order/add | API Url and Key from ShipRush |
+
 | testMode | false | If you're even unsure of the app's behavior, test mode allows you to only read values from RepiarShopr without writing anything to ShipRush. I adivse you set this to **true** the first time your run the app and check the logs first |
 - Don't forget to press "Save" on the "Application Settings" page after you add these values
 
