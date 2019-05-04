@@ -98,3 +98,4 @@ So, from now on, everything you do will be on your new forked repository.
 - Don't forget to press "Save" on the "Application Settings" page after you add these values
 
 And that's it, you should be done. To make sure the Function App is working, go back to the Function App's main page, click on the app name from the left menu, and scroll down the page to open the "Logs" pane. You should see something like this.
+![](images/azure-15)
