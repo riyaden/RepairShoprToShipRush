@@ -61,7 +61,7 @@ So, from now on, everything you do will be on your new forked repository.
 ### RepairShopr API Url
 - Login to your RepairShopr account
 - Note the Url in the browser for you RepairShopr tenant. For example, my url is https://**helshabini**.repairshopr.com 
-- To get the API Url, put in your tenant name in this Url: https://**yourtenant**.repairshopr.com/api/vi/invoices
+- To get the API Url, put in your tenant name in this Url: https://**yourtenant**.repairshopr.com/api/v1/invoices
 - Keep the API Url handy, we will need it later.
 
 ### RepairShopr API Key
