@@ -61,7 +61,7 @@ namespace RepairShoprToShipRush
                             continue;
                         }
 
-                        if (!string.IsNullOrEmpty(itemCode) && !invoice.line_items.Any(i => i.item.Contains(itemCode)))
+                        if (!string.IsNullOrEmpty(itemCode) && !invoice.line_items.Any(i => i.item.ToLower().Contains(itemCode.ToLower())))
                         {
                             log.LogInformation($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
 
