@@ -92,7 +92,10 @@ So, from now on, everything you do will be on your new forked repository.
 | repairShoprUri | **API Url from RepairShopr** |
 | repairShoprApiKey | **API Key from RepairShopr** |
 | shipRushUri | **API Url with Key you got from ShipRush** |
+| itemCode | **Search string for line items** |
 | testMode | **false** |
+
+**itemCode** allows you to only import invoices which has this search string in any if its line items name. For example, if an invoice contains a line item contain the word "MAIL IN", then the invoice would be processed to ShipRush. Otherwise, it will be ignored. To turn this off and processes all invoices regalrdless of the line items, just leave this field empty.
 
 **testMode** allows you to just test the app if you're unsure of the app's behavior. It allows you to only read values from RepiarShopr without writing anything to ShipRush. I adivse you set this to **true** the first time your run the app and check the logs first
 - Don't forget to press "Save" on the "Application Settings" page after you add these values. After I was done this is what it looked like for me.
