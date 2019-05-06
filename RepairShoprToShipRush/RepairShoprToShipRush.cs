@@ -61,9 +61,9 @@ namespace RepairShoprToShipRush
                             continue;
                         }
 
-                        if (!invoice.line_items.Any(i => i.item.Contains(itemCode)))
+                        if (!string.IsNullOrEmpty(itemCode) && !invoice.line_items.Any(i => i.item.Contains(itemCode)))
                         {
-                            log.LogError($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
+                            log.LogInformation($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
 
                             var regularInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#null-order-id   " + invoice.note + "\"}");
                             if (regularInvoice == null || regularInvoice.note == invoice.note)
