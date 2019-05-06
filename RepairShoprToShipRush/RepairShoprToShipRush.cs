@@ -11,14 +11,14 @@ namespace RepairShoprToShipRush
     public static class RepairShoprToShipRush
     {
         [FunctionName("RepairShoprToShipRush")]
-        public static async Task RunAsync([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task RunAsync([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
-            string rsUri, rsApiKey, srUri;
+            string rsUri, rsApiKey, srUri, itemCode;
             bool testMode;
 
-            if (!CheckEnvironmentVariables(out rsUri, out rsApiKey, out srUri, out testMode))
+            if (!CheckEnvironmentVariables(out rsUri, out rsApiKey, out srUri, out itemCode, out testMode))
             {
                 log.LogInformation($"{DateTime.Now} | Error reading environment variables, make sure application settings are correct");
                 return;
@@ -61,6 +61,18 @@ namespace RepairShoprToShipRush
                             continue;
                         }
 
+                        if (!invoice.line_items.Any(i => i.item.Contains(itemCode)))
+                        {
+                            log.LogError($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
+
+                            var regularInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#null-order-id   " + invoice.note + "\"}");
+                            if (regularInvoice == null || regularInvoice.note == invoice.note)
+                            {
+                                log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from RepairShopr");
+                            }
+                            continue;
+                        }
+
                         if (testMode)
                         {
                             log.LogInformation($"{DateTime.Now} | Test mode active, no changes will be done...");
@@ -89,19 +101,21 @@ namespace RepairShoprToShipRush
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has ended");
         }
 
-        private static bool CheckEnvironmentVariables(out string rsUri, out string rsApiKey, out string srUri, out bool testMode)
+        private static bool CheckEnvironmentVariables(out string rsUri, out string rsApiKey, out string srUri, out string itemCode, out bool testMode)
         {
             try
             {
                 rsUri = Environment.GetEnvironmentVariable("repairShoprUri");
                 rsApiKey = Environment.GetEnvironmentVariable("repairShoprApiKey");
                 srUri = Environment.GetEnvironmentVariable("shipRushUri");
+                itemCode = Environment.GetEnvironmentVariable("itemCode");
             }
             catch(Exception)
             {
                 rsUri = null;
                 rsApiKey = null;
                 srUri = null;
+                itemCode = null;
                 testMode = false;
 
                 return false;
