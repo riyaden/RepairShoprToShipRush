@@ -30,11 +30,11 @@ namespace RepairShoprToShipRush
                 var invoicesList = await rsConnector.GetInvoicesList(invoicesListUri, delegate (Invoice i)
                 {
                     return
-                    (i.is_paid.HasValue && i.is_paid.Value)
-                    &&
-                    ((string.IsNullOrEmpty(i.note))
-                    ||
-                    (!string.IsNullOrEmpty(i.note) && !i.note.Contains("ShipRushOrderID#")));
+                    (i.is_paid.HasValue && i.is_paid.Value);
+                    //&&
+                    //((string.IsNullOrEmpty(i.note))
+                    //||
+                    //(!string.IsNullOrEmpty(i.note) && !i.note.Contains("ShipRushOrderID#")));
                 });
 
 

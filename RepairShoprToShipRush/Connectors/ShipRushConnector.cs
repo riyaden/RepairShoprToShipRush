@@ -83,13 +83,57 @@ namespace RepairShoprToShipRush.Connectors
 
         private string GetXmlContent(string xmlPayloadTemplate, Invoice invoice, string lineitems)
         {
+            string[] statecountry = invoice.customer.state.Split(',');
+            string[] statesList = Constants.statesList.Split(',');
+            string[] countriesList = Constants.countriesList.Split(',');
+            string state = string.Empty;
+            string country = string.Empty;
+
+            if (statecountry.Length == 1)
+            {
+                bool stateExists = Array.Exists(
+                    statesList,
+                    delegate (string s) { return s.Equals(statecountry[0].Trim()); }
+                    );
+
+                bool countryExists = Array.Exists(
+                    countriesList,
+                    delegate (string s) { return s.Equals(statecountry[0].Trim()); }
+                    );
+
+                if (stateExists && !countryExists)
+                {
+                    state = statecountry[0].Trim();
+                    country = "US";
+                }
+                else if(!stateExists && countryExists)
+                {
+                    country = statecountry[0].Trim();
+                }
+                else if (stateExists && countryExists)
+                {
+                    state = statecountry[0].Trim();
+                    country = statecountry[0].Trim();
+                }
+                else if (!stateExists && !countryExists)
+                {
+                    country = statecountry[0].Trim();
+                }
+            }
+            else if (statecountry.Length > 1)
+            {
+                state = statecountry[0].Trim();
+                country = statecountry[1].Trim();
+            }
+
             string xmlPayload = string.Format(xmlPayloadTemplate,
                                                     invoice.customer.fullname,
                                                     invoice.customer.business_name,
                                                     invoice.customer.address,
                                                     invoice.customer.address_2,
                                                     invoice.customer.city,
-                                                    invoice.customer.state,
+                                                    state,
+                                                    country,
                                                     invoice.customer.zip,
                                                     invoice.customer.mobile,
                                                     invoice.customer.email,
