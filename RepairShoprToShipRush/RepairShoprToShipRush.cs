@@ -61,16 +61,30 @@ namespace RepairShoprToShipRush
                             continue;
                         }
 
-                        if (!string.IsNullOrEmpty(itemCode) && !invoice.line_items.Any(i => i.item.ToLower().Contains(itemCode.ToLower())))
+                        if (!string.IsNullOrEmpty(itemCode))
                         {
-                            log.LogInformation($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
-
-                            var regularInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#null-order-id   " + invoice.note + "\"}");
-                            if (regularInvoice == null || regularInvoice.note == invoice.note)
+                            bool mailIn = false;
+                            string[] codes = itemCode.Split(",");
+                            foreach (string code in codes)
                             {
-                                log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from RepairShopr");
+                                if (invoice.line_items.Any(i => i.item.ToLower().Contains(code.ToLower())))
+                                {
+                                    mailIn = true;
+                                    break;
+                                }
                             }
-                            continue;
+
+                            if (!mailIn)
+                            {
+                                log.LogInformation($"{DateTime.Now} | Invoice is not mail in. So we'll just leave our flag in it and exit");
+
+                                var regularInvoice = await rsConnector.SetInvoice(invoiceDetailsUri, "{\"note\":\"ShipRushOrderID#null-order-id   " + invoice.note + "\"}");
+                                if (regularInvoice == null || regularInvoice.note == invoice.note)
+                                {
+                                    log.LogError($"{DateTime.Now} | Updating invoice has probably failed, this could result in this invoice being picked up again, please cleanup this invoice manually from RepairShopr");
+                                }
+                                continue;
+                            }
                         }
 
                         if (testMode)
