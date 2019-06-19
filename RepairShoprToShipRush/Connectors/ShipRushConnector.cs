@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 using RepairShoprToShipRush.Domain;
@@ -69,7 +70,7 @@ namespace RepairShoprToShipRush.Connectors
                 string itemtotal = (float.Parse(lineitem.quantity) * float.Parse(lineitem.price)).ToString();
 
                 string itemPayload = string.Format(itemPayloadTemplate,
-                    lineitem.name,
+                    HttpUtility.HtmlEncode(lineitem.name),
                     lineitem.price,
                     lineitem.quantity,
                     itemtotal
