@@ -128,11 +128,11 @@ namespace RepairShoprToShipRush.Connectors
             }
 
             string xmlPayload = string.Format(xmlPayloadTemplate,
-                                                    invoice.customer.fullname,
-                                                    invoice.customer.business_name,
-                                                    invoice.customer.address,
-                                                    invoice.customer.address_2,
-                                                    invoice.customer.city,
+                                                    HttpUtility.HtmlEncode(invoice.customer.fullname),
+                                                    HttpUtility.HtmlEncode(invoice.customer.business_name),
+                                                    HttpUtility.HtmlEncode(invoice.customer.address),
+                                                    HttpUtility.HtmlEncode(invoice.customer.address_2),
+                                                    HttpUtility.HtmlEncode(invoice.customer.city),
                                                     state,
                                                     country,
                                                     invoice.customer.zip,
