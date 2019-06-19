@@ -15,7 +15,10 @@ namespace RepairShoprToShipRush
         {
             log.LogInformation($"{DateTime.Now} | C# Timer trigger function has started");
 
-            if (!CheckEnvironmentVariables(out string rsUri, out string rsApiKey, out string srUri, out string itemCode, out bool testMode))
+            string rsUri, rsApiKey, srUri, itemCode;
+            bool testMode;
+
+            if (!CheckEnvironmentVariables(out rsUri, out rsApiKey, out srUri, out itemCode, out testMode))
             {
                 log.LogInformation($"{DateTime.Now} | Error reading environment variables, make sure application settings are correct");
                 return;
