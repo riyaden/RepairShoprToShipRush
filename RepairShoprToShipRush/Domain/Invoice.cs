@@ -29,5 +29,7 @@ namespace RepairShoprToShipRush.Domain
         public List<Payment> payments { get; set; }
         public string hardwarecost { get; set; }
         public Customer customer { get; set; }
+        public int? customer_id { get; set; }
+        public string customer_business_then_name { get; set; }
     }
 }

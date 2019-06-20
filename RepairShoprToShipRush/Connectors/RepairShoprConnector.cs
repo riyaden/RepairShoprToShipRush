@@ -44,6 +44,17 @@ namespace RepairShoprToShipRush.Connectors
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var invoicesList = JsonConvert.DeserializeObject<InvoicesList>(json);
+                for (int i = 2; i <= invoicesList.meta.total_pages; i++)
+                {
+                    response = await client.GetAsync(uri + "&page=" + i);
+                    result = new List<Invoice>();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        json = await response.Content.ReadAsStringAsync();
+                        invoicesList.invoices.AddRange(JsonConvert.DeserializeObject<InvoicesList>(json).invoices);
+                    }
+                }
+
                 result = invoicesList.invoices.Where(filter ?? (s => true)).ToList();
             }
             else

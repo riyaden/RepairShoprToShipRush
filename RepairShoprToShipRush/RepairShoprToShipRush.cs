@@ -26,15 +26,13 @@ namespace RepairShoprToShipRush
 
             using (var rsConnector = new RepairShoprConnector(log))
             {
-                var invoicesListUri = rsUri + "?api_key=" + rsApiKey;
+                var invoicesListUri = rsUri + "?paid=true" + "&since_updated_at=" + DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd") + "&api_key=" + rsApiKey;
                 var invoicesList = await rsConnector.GetInvoicesList(invoicesListUri, delegate (Invoice i)
                 {
                     return
-                    (i.is_paid.HasValue && i.is_paid.Value)
-                    &&
-                    ((string.IsNullOrEmpty(i.note))
+                    (string.IsNullOrEmpty(i.note))
                     ||
-                    (!string.IsNullOrEmpty(i.note) && !i.note.Contains("ShipRushOrderID#")));
+                    (!string.IsNullOrEmpty(i.note) && !i.note.Contains("ShipRushOrderID#"));
                 });
 
 
