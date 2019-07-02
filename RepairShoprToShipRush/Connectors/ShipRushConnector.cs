@@ -87,6 +87,8 @@ namespace RepairShoprToShipRush.Connectors
             string[] statecountry = invoice.customer.state.Split(',');
             string[] statesList = Constants.statesList.Split(',');
             string[] countriesList = Constants.countriesList.Split(',');
+            string[] statesUSList = Constants.statesUSList.Split(',');
+            
             string state = string.Empty;
             string country = string.Empty;
 
@@ -112,6 +114,16 @@ namespace RepairShoprToShipRush.Connectors
                     else
                     {
                         state = statecountry[0].Trim();
+                        bool countryUSExists = Array.Exists(
+                            statesUSList,
+                            delegate (string s) { return s.Equals(statecountry[0].Trim()); }
+                            );
+                        
+                        if (countryUSExists)
+                            country = "US";
+                        else
+                            country = statecountry[0].Trim();
+                            
                         country = "US";
                     }
                 }
