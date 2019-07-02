@@ -109,14 +109,10 @@ namespace RepairShoprToShipRush.Connectors
                     if (countryExists)
                     {
                         state = statecountry[0].Trim();
-                        country = "US";
-                    }
-                    else
-                    {
-                        state = statecountry[0].Trim();
+                        
                         bool countryUSExists = Array.Exists(
-                            statesUSList,
-                            delegate (string s) { return s.Equals(statecountry[0].Trim()); }
+                            statesList,
+                            delegate (string s) { return s.Equals(state); }
                             );
                         
                         if (countryUSExists)
@@ -124,6 +120,11 @@ namespace RepairShoprToShipRush.Connectors
                         else
                             country = statecountry[0].Trim();
                             
+                        // country = "US";
+                    }
+                    else
+                    {
+                        state = statecountry[0].Trim();                            
                         country = "US";
                     }
                 }
