@@ -8,6 +8,8 @@ using System.Xml;
 using Microsoft.Extensions.Logging;
 using RepairShoprToShipRush.Domain;
 using RepairShoprToShipRush.Helpers;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace RepairShoprToShipRush.Connectors
 {
@@ -88,6 +90,7 @@ namespace RepairShoprToShipRush.Connectors
             string[] statesList = Constants.statesList.Split(',');
             string[] countriesList = Constants.countriesList.Split(',');
             string[] statesUSList = Constants.statesUSList.Split(',');
+            string stateNamesList = Constants.stateNamesList;
             
             string state = string.Empty;
             string country = string.Empty;
@@ -129,15 +132,31 @@ namespace RepairShoprToShipRush.Connectors
                     }
                 }
                 else
-                {
-                    if (countryExists)
+ {
+
+                    Dictionary<string, string> dict = stateNamesList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                       .Select(part => part.Split('='))
+                       .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
+
+                    string tempState = statecountry[0].Trim().ToUpper();
+                    bool exist = false;
+
+                    foreach (string key in dict.Keys)
+                    {
+                        if (dict[key] == tempState)
+                        {
+                            state = key;
+                            country = "US";
+                            exist = true;
+                        }
+
+                    }
+                    if (!exist)
                     {
                         country = statecountry[0].Trim();
                     }
-                    else
-                    {
-                        country = statecountry[0].Trim();
-                    }
+
+                   
                 }
                     
                     
