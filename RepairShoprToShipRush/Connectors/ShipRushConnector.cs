@@ -102,6 +102,33 @@ namespace RepairShoprToShipRush.Connectors
                     delegate (string s) { return s.Equals(statecountry[0].Trim()); }
                     );
 
+                if (stateExists)
+                {
+                    if (countryExists)
+                    {
+                        state = statecountry[0].Trim();
+                        country = "US";
+                    }
+                    else
+                    {
+                        state = statecountry[0].Trim();
+                        country = "US";
+                    }
+                }
+                else
+                {
+                    if (countryExists)
+                    {
+                        country = statecountry[0].Trim();
+                    }
+                    else
+                    {
+                        country = statecountry[0].Trim();
+                    }
+                }
+                    
+                    
+                /*
                 if (stateExists && !countryExists)
                 {
                     state = statecountry[0].Trim();
@@ -120,6 +147,7 @@ namespace RepairShoprToShipRush.Connectors
                 {
                     country = statecountry[0].Trim();
                 }
+                */
             }
             else if (statecountry.Length > 1)
             {
