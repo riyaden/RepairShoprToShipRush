@@ -86,10 +86,11 @@ namespace RepairShoprToShipRush.Connectors
 
         private string GetXmlContent(string xmlPayloadTemplate, Invoice invoice, string lineitems)
         {
-             string[] statecountry = invoice.customer.state.Split(',');
+
+            string[] statecountry = invoice.customer.state.Split(',');
             string[] statesList = Constants.statesList.Split(',');
             string[] countriesList = Constants.countriesList.Split(',');
-            string[] statesUSList = Constants.statesUSList.Split(',');
+            // string[] statesUSList = Constants.statesUSList.Split(',');
             string[] statesUKList = Constants.statesUKList.Split(',');
 
             string stateNamesList = Constants.stateNamesList;
@@ -97,124 +98,67 @@ namespace RepairShoprToShipRush.Connectors
             string state = string.Empty;
             string country = string.Empty;
 
+            Dictionary<string, string> dictUSSates = stateNamesList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                     .Select(part => part.Split('='))
+                     .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
+
             if (statecountry.Length == 1)
             {
-                bool stateExists = Array.Exists(
-                    statesList,
-                    delegate (string s) { return s.Equals(statecountry[0].Trim()); }
-                    );
-
-                bool countryExists = Array.Exists(
-                    countriesList,
-                    delegate (string s) { return s.Equals(statecountry[0].Trim()); }
-                    );
+                state = statecountry[0].Trim();
+                bool stateExists = Array.Exists(statesList,
+                                                delegate (string s) {
+                                                    return s.Equals(state);
+                                                });
 
                 if (stateExists)
-                {
-                    if (countryExists)
-                    {
-                        bool countryUSExists = Array.Exists(
-                            statesUSList,
-                            delegate (string s) { return s.Equals(statecountry[0].Trim()); }
-                            );
-
-                        if (countryUSExists)
-                            country = "US";
-                        else
-                            country = statecountry[0].Trim();
-
-                        state = statecountry[0].Trim();
-                        //country = "US";
-                    }
-                    else
-                    {
-                        state = statecountry[0].Trim();
-                        country = "US";
-                    }
-                }
+                    country = "US";
                 else
                 {
+                    // Check long state
+                    country = GetState(dictUSSates, state, "US");
 
-                    Dictionary<string, string> dict = stateNamesList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                       .Select(part => part.Split('='))
-                       .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
-
-                    string tempState = statecountry[0].Trim().ToUpper();
-                    bool exist = false;
-
-                    foreach (string key in dict.Keys)
+                    if (country == "")
                     {
-                        if (dict[key] == tempState)
-                        {
-                            state = key;
-                            country = "US";
-                            exist = true;
-                        }
+                        // Get UK States
+                        stateExists = Array.Exists(statesUKList,
+                                              delegate (string s) {
+                                                  return s.Equals(state);
+                                              });
+                        if (stateExists)
+                            country = "UK";
+                        else
+                            country = state;
 
                     }
-                    if (!exist)
-                    {
-                        country = statecountry[0].Trim();
-                        bool UKExist = false;
-
-                        foreach (string stateUK in statesUKList)
-                        {
-                            if (stateUK.ToUpper() == statecountry[0].Trim().ToUpper() )
-                            {
-                                UKExist = true;
-                                state = stateUK;
-                                country = "UK";
-                            }
-                        }
-                        
-                        if (!UKExist)
-                        {
-                            state = statecountry[0].Trim();
-                            country = statecountry[0].Trim();
-                        }
-
-                    }
-                    else
-                    {
-                        //state = statecountry[0].Trim();
-                        //country = statecountry[0].Trim();
-                    }
-
-                   
+                  
                 }
 
-                /*
-                if (stateExists && !countryExists)
-                {
-                    state = statecountry[0].Trim();
-                    country = "US";
-                }
-                else if(!stateExists && countryExists)
-                {
-                    country = statecountry[0].Trim();
-                }
-                else if (stateExists && countryExists)
-                {
-                    state = statecountry[0].Trim();
-                    country = statecountry[0].Trim();
-                }
-                else if (!stateExists && !countryExists)
-                {
-                    country = statecountry[0].Trim();
-                }
-                */
             }
             else if (statecountry.Length > 1)
             {
-                state = statecountry[0].Trim();
-                country = statecountry[1].Trim();
+                // Check long state
+                country = GetState(dictUSSates, state, "US");
+                if (country == "")
+                {
+                    // Get UK States
+                    bool stateExists = Array.Exists(statesUKList,
+                                          delegate (string s) {
+                                              return s.Equals(state);
+                                          });
+                    if (stateExists)
+                        country = "UK";
+                    else
+                        country = state;
+
+                }
+
             }
             else
             {
                 state = statecountry[0].Trim();
                 country = "US";
 
-            }
+            }        
 
             string xmlPayload = string.Format(xmlPayloadTemplate,
                                                     HttpUtility.HtmlEncode(invoice.customer.fullname),
