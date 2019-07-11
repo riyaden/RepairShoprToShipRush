@@ -84,6 +84,19 @@ namespace RepairShoprToShipRush.Connectors
             return lineitems;
         }
 
+        private string GetState(Dictionary<string, string> dictionary, string state, string country)
+        {
+            foreach (string key in dictionary.Keys)
+            {
+                if (dictionary[key].ToUpper() == state.ToUpper())
+                {
+                    return country;
+                }
+
+            }
+            return "";
+        }
+        
         private string GetXmlContent(string xmlPayloadTemplate, Invoice invoice, string lineitems)
         {
 
