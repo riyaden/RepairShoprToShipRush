@@ -100,13 +100,13 @@ namespace RepairShoprToShipRush.Connectors
         private string GetXmlContent(string xmlPayloadTemplate, Invoice invoice, string lineitems)
         {
 
-            string[] statecountry = invoice.customer.state.Split(',');
-            string[] statesList = Constants.statesList.Split(',');
-            string[] countriesList = Constants.countriesList.Split(',');
-            // string[] statesUSList = Constants.statesUSList.Split(',');
-            string[] statesUKList = Constants.statesUKList.Split(',');
+            string[] statecountry = invoice.customer.state.ToUpper().Split(',');
+            string[] statesList = Constants.statesList.ToUpper().Split(',');
+            string[] countriesList = Constants.countriesList.ToUpper().Split(',');
+            
+            string[] statesUKList = Constants.statesUKList.ToUpper().Split(',');
 
-            string stateNamesList = Constants.stateNamesList;
+            string stateNamesList = Constants.stateNamesList.ToUpper();
 
             string state = string.Empty;
             string country = string.Empty;
@@ -115,13 +115,14 @@ namespace RepairShoprToShipRush.Connectors
                      .Select(part => part.Split('='))
                      .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
 
+            state = statecountry[0].Trim().ToUpper();
             if (statecountry.Length == 1)
             {
-                state = statecountry[0].Trim();
                 bool stateExists = Array.Exists(statesList,
                                                 delegate (string s) {
                                                     return s.Equals(state);
                                                 });
+
 
                 if (stateExists)
                     country = "US";
