@@ -10,6 +10,7 @@ using RepairShoprToShipRush.Domain;
 using RepairShoprToShipRush.Helpers;
 using System.Linq;
 using System.Collections.Generic;
+using Places;
 
 namespace RepairShoprToShipRush.Connectors
 {
@@ -36,7 +37,7 @@ namespace RepairShoprToShipRush.Connectors
         public async Task<string> AddOrder(string uri, Invoice invoice)
         {
             string lineitemsXml = GetLineItems(Constants.itemPayloadTemplate, invoice);
-            string xmlPayload = GetXmlContent(Constants.xmlPayloadTemplate, invoice, lineitemsXml);
+            string xmlPayload = await GetXmlContentAsync(Constants.xmlPayloadTemplate, invoice, lineitemsXml);
             var xmlContent = new StringContent(xmlPayload, Encoding.UTF8, "application/xml");
 
             log.LogInformation($"{DateTime.Now} | Pushing payload {xmlPayload} to Uri {uri}");
@@ -84,33 +85,80 @@ namespace RepairShoprToShipRush.Connectors
             return lineitems;
         }
 
-        private string GetState(Dictionary<string, string> dictionary, string state, string country)
+        private string GetCountry(Dictionary<string, string> dictionary, string country)
         {
             foreach (string key in dictionary.Keys)
             {
-                if (dictionary[key].ToUpper() == state.ToUpper())
+                if (dictionary[key].ToUpper() == country.ToUpper())
                 {
-                    return country;
+                    return key;
                 }
 
             }
             return "";
         }
         
-        private string GetXmlContent(string xmlPayloadTemplate, Invoice invoice, string lineitems)
+        private async Task<string> GetXmlContentAsync(string xmlPayloadTemplate, Invoice invoice, string lineitems)
         {
+            // Response results;
+            //string city = invoice.customer.city;
+
+
 
             string[] statecountry = invoice.customer.state.ToUpper().Split(',');
-            string[] statesList = Constants.statesList.ToUpper().Split(',');
-            string[] countriesList = Constants.countriesList.ToUpper().Split(',');
-            
-            string[] statesUKList = Constants.statesUKList.ToUpper().Split(',');
-
-            string stateNamesList = Constants.stateNamesList.ToUpper();
+            string countryList = Constants.countryFull.ToUpper();
 
             string state = string.Empty;
             string country = string.Empty;
 
+            state = statecountry[0].Trim().ToUpper();
+
+            Response results;
+            var placeList = new List<Place>();
+            string city = invoice.customer.city;
+
+            results = await Places.Api.TextSearch(city + ", " + state, Constants.apiKey);
+            //add the results to placeList
+            foreach (var place in results.Places)
+            {
+                placeList.Add(place);
+            }
+
+            string address = "";
+            foreach (var place in placeList)
+            {
+                var placeDetails = await Places.Api.GetDetails(place.PlaceId, Constants.apiKey);
+               
+                string name = place.Name;
+                address = placeDetails.Address;
+                break;
+
+            }
+            string countryFull = address.Substring(address.LastIndexOf(",")).Trim().ToUpper();
+
+            Dictionary<string, string> dictCountries = countryList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                     .Select(part => part.Split('='))
+                     .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
+
+
+
+            if (countryFull.Length > 3)
+            {
+                country = GetCountry(dictCountries, countryFull);
+            }
+            else
+            {
+                countryList = Constants.countryThree.ToUpper();
+
+                dictCountries = countryList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(part => part.Split('='))
+                                .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
+
+                country = GetCountry(dictCountries, countryFull);
+
+            }
+
+            /*
             Dictionary<string, string> dictUSSates = stateNamesList.ToUpper().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                      .Select(part => part.Split('='))
                      .ToDictionary(split => split[0].ToUpper(), split => split[1].ToUpper());
@@ -174,6 +222,7 @@ namespace RepairShoprToShipRush.Connectors
 
             }        
 
+    */
             string xmlPayload = string.Format(xmlPayloadTemplate,
                                                     HttpUtility.HtmlEncode(invoice.customer.fullname),
                                                     HttpUtility.HtmlEncode(invoice.customer.business_name),
@@ -193,6 +242,7 @@ namespace RepairShoprToShipRush.Connectors
                                                     );
 
             log.LogInformation($"{DateTime.Now} | Parsing completed, XML Payload: {xmlPayload}");
+
             return xmlPayload;
         }
     }

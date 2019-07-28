@@ -7,6 +7,14 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Places">
+      <HintPath>..\..\Places.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
